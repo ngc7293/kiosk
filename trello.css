@@ -1,0 +1,15 @@
+#header,
+.js-star-board,
+span.org-label,
+.perms-btn,
+.calendar-btn,
+.mod-show-menu,
+.board-header-plugin-btns,
+.board-header-facepile,
+.board-header-btn-invite,
+.board-header-btn-divider,
+.js-open-card-composer,
+.js-add-list,
+.list-header-extras-menu {
+    display: none;
+}

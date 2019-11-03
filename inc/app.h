@@ -15,6 +15,7 @@ class App : public QMainWindow {
     Q_OBJECT
 
 private:
+    QString css_;
     QStackedWidget* stack_;
     QMenu* menu_;
 
@@ -29,6 +30,7 @@ public:
 
 private:
     void addView(QUrl url);
+    void addCSS(QWebEngineView& view);
     bool readUrlFile(QString path);
 
 public slots:

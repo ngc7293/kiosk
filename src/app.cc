@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QInputDialog>
 #include <QLineEdit>
+#include <QtWebEngineWidgets/QWebEngineScript>
+#include <QtWebEngineWidgets/QWebEngineScriptCollection>
 
 App::App(QCommandLineParser& parser, QWidget* parent)
     : QMainWindow(parent)
@@ -34,6 +36,10 @@ App::App(QCommandLineParser& parser, QWidget* parent)
     connect(toggle_cycle_act_, &QAction::triggered, this, &App::toggleCycle);
 
     connect(timer_, &QTimer::timeout, this, &App::showNext);
+
+    if (parser.isSet("css") && QFile(parser.value("css")).exists()) {
+        css_ = parser.value("css");
+    }
 
     if (!(parser.isSet("urls") && readUrlFile(parser.value("urls")))) {
         addView(QUrl("https://trello.com"));
@@ -67,13 +73,40 @@ void App::addView(QUrl url)
     if (stack_->count() == 1) {
         stack_->currentWidget()->show();
     }
-    std::cout << "Added [" << qPrintable(url.toString()) << "]" << std::endl;
+
+    if (css_ != "") {
+        addCSS(*view);
+    }
+}
+
+void App::addCSS(QWebEngineView& view)
+{
+    QFile css(css_);
+    if (!css.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return;
+    }
+
+    QString source = css.readAll();
+    QWebEngineScript script;
+    QString stylesheet = QString(""\
+        "(function() {" \
+        "    css = document.createElement('style');"\
+        "    css.type = 'text/css';"\
+        "    document.head.appendChild(css);"\
+        "    css.innerText = '%1';"\
+        "})()").arg(source.simplified());
+
+    script.setName("custom_css");
+    script.setSourceCode(stylesheet);
+    script.setInjectionPoint(QWebEngineScript::DocumentReady);
+    script.setRunsOnSubFrames(true);
+    script.setWorldId(QWebEngineScript::ApplicationWorld);
+    view.page()->scripts().insert(script);
 }
 
 bool App::readUrlFile(QString path)
 {
     QFile file(path);
-    std::cout << qPrintable(path) << std::endl;
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return false;
