@@ -1,6 +1,9 @@
 # Build artefacts
 build/
 
+# Python
+venv/
+
 # IDE
 .vscode/
 
