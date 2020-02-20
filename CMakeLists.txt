@@ -10,6 +10,7 @@ set( SOURCES
 src/app.cc
 src/main.cc
 src/view.cc
+src/remote.cc
 )
 
 SET( HEADERS
@@ -17,6 +18,7 @@ inc/app.h
 inc/view.h
 inc/ticker.h
 inc/state.h
+inc/remote.h
 )
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
@@ -26,6 +28,9 @@ endif()
 # Qt5
 set (CMAKE_PREFIX_PATH /opt/Qt/5.14.1/gcc_64/)
 find_package(Qt5 COMPONENTS Core Widgets Network WebEngine WebEngineWidgets REQUIRED)
+
+# Nlohmann JSON
+find_package(nlohmann_json 3.7.0 REQUIRED)
 
 add_executable(kiosk ${SOURCES} ${HEADERS})
 set_property(TARGET kiosk PROPERTY CXX_STANDARD 17)

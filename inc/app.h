@@ -8,6 +8,7 @@
 #include "state.h"
 #include "view.h"
 #include "ticker.h"
+#include "remote.h"
 
 class App : public QMainWindow {
     Q_OBJECT
@@ -16,6 +17,7 @@ private:
     State state_;
     View* view_;
     Ticker* ticker_;
+    Remote* remote_;
 
     QMenu* menu_;
     QAction* fullscreen_act_;

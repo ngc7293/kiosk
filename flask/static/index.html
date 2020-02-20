@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Title</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div id="container">
+                <div class="button play" v-if="autoplay" v-on:click="setAutoplay(false)">
+                    <span>Pause</span>
+                </div>
+                <div class="button play" v-if="!autoplay" v-on:click="setAutoplay(true)">
+                    <span>Play</span>
+                </div>
+                <div class="button board" v-for="(item, i) in items" v-on:click="setCurrent(i)">
+                    <span class="item-name">{{item.name}}</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+var app = new Vue({
+    el: '#app',
+    data: {
+        autoplay: false,
+        items: []
+    },
+
+    mounted() {
+        this.getState()
+    },
+
+    methods: {
+        getState: function() {
+            axios.post('/', {
+                operation: 'get_state'
+            }).then(response => {
+                this.items = response.data.items
+                this.autoplay = response.data.autoplay
+                console.log("get state")
+            })
+        },
+        setAutoplay: function(autoplay) {
+            axios.post('/', {
+                operation: 'set_autoplay',
+                parameters: [autoplay]
+            }).then(response => {
+                console.log("set autoplay")
+                this.getState()
+            })
+        },
+        setCurrent: function(index) {
+            axios.post('/', {
+                operation: 'set_current',
+                parameters: [index]
+            }).then(response => {
+                console.log("set current")
+                this.setAutoplay(false)
+            })
+        }
+    }
+})
+        </script>
+
+        <style>
+#container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+
+    width: 20rem;
+    height: 7.5rem;
+    margin: 1rem;
+}
+
+.play {
+    background-color: grey;
+}
+
+.board {
+    background-color: pink;
+}
+        </style>
+    </body>
+</html>

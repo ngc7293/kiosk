@@ -13,12 +13,14 @@ public:
     class Item {
     private:
         std::string url_;
+        std::string name_;
 
     public:
-        Item(std::string url) : url_(url) {}
+        Item(std::string url, std::string name = "") : url_(url), name_(name) {}
         ~Item() {}
 
         std::string_view url() const { return url_; }
+        std::string_view name() const { return name_; }
     };
 
 private:

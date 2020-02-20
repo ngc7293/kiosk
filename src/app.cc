@@ -20,6 +20,7 @@ App::App(QCommandLineParser& parser, QWidget* parent)
 {
     view_ = new View(this, state_);
     ticker_ = new Ticker(this, state_);
+    remote_ = new Remote(this, state_);
 
     connect(&state_, &State::changed, view_, &View::refresh);
     connect(&state_, &State::changed, ticker_, &Ticker::update);
@@ -71,7 +72,12 @@ bool App::readUrlFile(QString path)
 
     while(!file.atEnd()) {
         QByteArray line = file.readLine();
-        state_.add(std::string(line.data()));
+        QStringList tokens = QString(line).simplified().split(" ");
+        if (tokens.size() == 1) {
+            state_.add(tokens[0].toStdString());
+        } else {
+            state_.add(tokens[0].toStdString(), tokens[1].toStdString());
+        }
     }
 
     return true;
@@ -80,8 +86,9 @@ bool App::readUrlFile(QString path)
 void App::promptAddBoard()
 {
     bool ok;
-    QString text = QInputDialog::getText(this, "Trello", "Board URL", QLineEdit::Normal, "", &ok);
-    state_.add(text.toStdString());
+    QString name = QInputDialog::getText(this, "Trello", "Board Name", QLineEdit::Normal, "", &ok);
+    QString url = QInputDialog::getText(this, "Trello", "Board URL", QLineEdit::Normal, "", &ok);
+    state_.add(url.toStdString(), name.toStdString());
 }
 
 void App::toggleFullscreen()
