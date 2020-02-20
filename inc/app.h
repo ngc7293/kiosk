@@ -1,44 +1,38 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include <vector>
-
 #include <QMainWindow>
-#include <QAction>
-#include <QMenu>
+
 #include <QCommandLineParser>
-#include <QStackedWidget>
-#include <QTimer>
-#include <QtWebEngineWidgets/QWebEngineView>
+
+#include "state.h"
+#include "view.h"
+#include "ticker.h"
 
 class App : public QMainWindow {
     Q_OBJECT
 
 private:
-    QString css_;
-    QStackedWidget* stack_;
-    QMenu* menu_;
+    State state_;
+    View* view_;
+    Ticker* ticker_;
 
+    QMenu* menu_;
     QAction* fullscreen_act_;
     QAction* add_board_act_;
     QAction* toggle_cycle_act_;
-    QTimer* timer_;
 
 public:
-    explicit App(QCommandLineParser& parser, QWidget* parent = 0);
+    explicit App(QCommandLineParser& parser, QWidget* parent = nullptr);
     ~App();
 
 private:
-    void addView(QUrl url);
-    void addCSS(QWebEngineView& view);
     bool readUrlFile(QString path);
 
-public slots:
+private slots:
     void promptAddBoard();
-    void toggleFullScreen();
-    
-    void toggleCycle();
-    void showNext();
+    void toggleFullscreen();
+    void toggleAutoplay();
 };
 
 #endif
