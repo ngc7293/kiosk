@@ -69,11 +69,17 @@ var app = new Vue({
         </script>
 
         <style>
+body {
+  background: black;
+}
+
 #container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
 }
+
 .button {
     display: flex;
     justify-content: center;
@@ -87,15 +93,30 @@ var app = new Vue({
     width: 20rem;
     height: 7.5rem;
     margin: 1rem;
+    border-radius: 0.5rem;
+    color: white;
+}
+
+.button:hover {
+    cursor: pointer;   
 }
 
 .play {
-    background-color: grey;
+    border: #7df77d 0.2rem solid;
+}
+
+.play:hover {
+    background: #7df77d40;
 }
 
 .board {
-    background-color: pink;
+    border: #4db2ee 0.2rem solid;
 }
+
+.board:hover {
+    background: #4db2ee40;
+}
+
         </style>
     </body>
 </html>
