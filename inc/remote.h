@@ -29,6 +29,10 @@ public:
     ~Remote() override;
 
 private:
+    void success(QLocalSocket* socket);
+    void success(QLocalSocket* socket, json& payload);
+    void fail(QLocalSocket* socket, std::string message);
+
     void set_current(QLocalSocket* socket, json& parameters);
     void set_autoplay(QLocalSocket* socket, json& parameters);
     void get_state(QLocalSocket* socket, json& parameters);

@@ -46,53 +46,76 @@ void Remote::onData()
     try {
         request = json::parse(data.data());
     } catch (json::exception& e) {
-        std::cerr << "Could not parse JSON: " << e.what() << std::endl;
+        fail(connection, "invalid JSON");
         return;
     }
 
     if (!(request.count("operation") && request["operation"].is_string())) {
-        connection->write(R"({"status": "error", "message": "missing 'operation'"})");
+        fail(connection, "missing 'operation'");
         return;
     }
 
     if (!(request.count("parameters") && request["parameters"].is_array())) {
-        connection->write(R"({"status": "error", "message": "missing 'parameters'"})");
+        fail(connection, "missing 'parameters'");
         return;
     }
 
     std::string operation = request["operation"].get<std::string>();
     if (operations_.count(operation) == 0) {
-        connection->write(R"({"status": "error", "message": "unknown operation"})");
+        fail(connection, std::string("unknown operation '") + operation + "'");
         return;
     }
 
     operations_[operation](this, connection, request["parameters"]);
 }
 
+void Remote::success(QLocalSocket* socket)
+{
+    json response;
+    success(socket, response);
+}
+
+void Remote::success(QLocalSocket* socket, json& payload)
+{
+    payload["status"] = "success";
+    socket->write(payload.dump().c_str());
+}
+
+void Remote::fail(QLocalSocket* socket, std::string message)
+{
+    json response;
+    response["status"] = "error";
+    response["message"] = message;
+    socket->write(response.dump().c_str());
+}
+
 void Remote::set_current(QLocalSocket* socket, json& parameters)
 {
     if (!(parameters.size() == 1 && parameters[0].is_number_integer())) {
-        socket->write(R"({"error": "set_current takes exactly one integer argument")");
+        fail(socket, "set_current takes exactly one integer argument");
+        return;
     }
 
     state_.setCurrentIndex(parameters[0].get<int>());
-    socket->write(R"({"status": "success"})");
+    success(socket);
 }
 
 void Remote::set_autoplay(QLocalSocket* socket, json& parameters)
 {
     if (!(parameters.size() == 1 && parameters[0].is_boolean())) {
-        socket->write(R"({"status": "error", "message": "set_autoplay takes exactly one boolean argument")");
+        fail(socket, "set_autoplay takes exactly one boolean argument");
+        return;
     }
 
     state_.setAutoplay(parameters[0].get<bool>());
-    socket->write(R"({"status": "success"})");
+    success(socket);
 }
 
 void Remote::get_state(QLocalSocket* socket, json& parameters)
 {
     json response;
     response["autoplay"] = state_.autoplay();
+    response["current"] = state_.currentIndex();
     response["items"] = {};
     
     for (const State::Item& item : state_.items()) {
@@ -102,5 +125,5 @@ void Remote::get_state(QLocalSocket* socket, json& parameters)
         response["items"].push_back(obj);
     }
 
-    socket->write(response.dump().c_str());
+    success(socket, response);
 }

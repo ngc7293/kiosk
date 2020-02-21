@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import json
+# -*- coding: utf-8 -*-
+"""Micro Flask app to wrap kiosk's IPC responses in HTTP requests"""
 
+from json import loads, JSONDecodeError
 from socket import socket, AF_UNIX, SOCK_STREAM
+from os import getenv
 
-from flask import Flask, Response, request
-
-
-def connect():
-    sock.connect("/tmp/kiosk")
+from flask import Flask, jsonify, request
 
 
 sock = socket(family=AF_UNIX, type=SOCK_STREAM)
@@ -16,27 +15,27 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def index():
-    file = open("static/index.html")
-    return Response(file.read(), 200, mimetype='text/html')
+    """Serve the Vue.JS single-page single-file app"""
+    file = open('static/index.html')
+    return file.read(), 200
+
 
 @app.route('/', methods=['POST'])
 def update():
+    """Redirect HTTP to Unix Socket and vice-versa"""
     try:
         sock.send(request.data)
-    except BrokenPipeError:
-        return Response(json.dumps({'status': 'error', 'message': 'broken pipe'}), 500, mimetype='application/json')
-
-    data = json.loads(sock.recv(4096))
+        data = loads(sock.recv(4096))
+    except (BrokenPipeError, ConnectionError, OSError, JSONDecodeError):
+        return jsonify({'status': 'error', 'message': 'server error'}), 500
 
     status = 200
     if 'status' in data and data['status'] == 'error':
         status = 400
 
-    print(data)
-
-    return Response(json.dumps(data), status=status, mimetype='application/json')
+    return jsonify(data), status
 
 
-if __name__ == "__main__":
-    connect()
-    app.run(host='192.168.8.68')
+if __name__ == '__main__':
+    sock.connect('/tmp/kiosk')
+    app.run(host=getenv('FLASK_HOST', '127.0.0.1'))

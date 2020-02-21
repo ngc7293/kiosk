@@ -20,7 +20,10 @@ App::App(QCommandLineParser& parser, QWidget* parent)
 {
     view_ = new View(this, state_);
     ticker_ = new Ticker(this, state_);
-    remote_ = new Remote(this, state_);
+
+    if (parser.isSet("ipc")) {
+        remote_ = new Remote(this, state_);
+    }
 
     connect(&state_, &State::changed, view_, &View::refresh);
     connect(&state_, &State::changed, ticker_, &Ticker::update);

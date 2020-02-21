@@ -10,8 +10,10 @@ void buildArgParser(QCommandLineParser& parser)
     QCommandLineOption start(QStringList() << "s" << "start", QObject::tr("Start cycling on launch"));
     QCommandLineOption fullscreen(QStringList() << "f" << "fullscreen", QObject::tr("Launch fullscreen"));
     QCommandLineOption css(QStringList() << "css", QObject::tr("Stylesheet to inject"), "css");
+    QCommandLineOption ipc(QStringList() << "ipc", QObject::tr("Enable the IPC server"));
 
-    parser.addOptions(QList<QCommandLineOption>() << urls << start << fullscreen << css);
+    parser.addOptions(QList<QCommandLineOption>() << ipc << urls << start << fullscreen << css);
+    parser.addHelpOption();
 }
 
 int main(int argc, char* argv[])
