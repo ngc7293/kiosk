@@ -20,6 +20,10 @@ Remote::Remote(QObject* parent, State& state)
     }
 
     connect(server_, &QLocalServer::newConnection, this, &Remote::onConnect);
+
+    operations_["get_state"] = &Remote::get_state;
+    operations_["set_current"] = &Remote::set_current;
+    operations_["set_autoplay"] = &Remote::set_autoplay;
 }
 
 Remote::~Remote()
@@ -47,42 +51,56 @@ void Remote::onData()
     }
 
     if (!(request.count("operation") && request["operation"].is_string())) {
-        connection->write(R"({"status": "error", "message": "missing operation parameter"})");
+        connection->write(R"({"status": "error", "message": "missing 'operation'"})");
+        return;
+    }
+
+    if (!(request.count("parameters") && request["parameters"].is_array())) {
+        connection->write(R"({"status": "error", "message": "missing 'parameters'"})");
         return;
     }
 
     std::string operation = request["operation"].get<std::string>();
-
-    if (operation == "set_autoplay") {
-        if (!(request.count("parameters") && request["parameters"].is_array() && request["parameters"].size() == 1 && request["parameters"][0].is_boolean())) {
-            connection->write(R"({"status": "error", "message": "set_autoplay takes exactly one boolean argument")");
-        }
-
-        state_.setAutoplay(request["parameters"][0].get<bool>());
-        connection->write(R"({"status": "success"})");
+    if (operations_.count(operation) == 0) {
+        connection->write(R"({"status": "error", "message": "unknown operation"})");
+        return;
     }
 
-    if (operation == "set_current") {
-        if (!(request.count("parameters") && request["parameters"].is_array() && request["parameters"].size() == 1 && request["parameters"][0].is_number_integer())) {
-            connection->write(R"({"error": "set_current takes exactly one integer argument")");
-        }
+    operations_[operation](this, connection, request["parameters"]);
+}
 
-        state_.setCurrentIndex(request["parameters"][0].get<int>());
-        connection->write(R"({"status": "success"})");
+void Remote::set_current(QLocalSocket* socket, json& parameters)
+{
+    if (!(parameters.size() == 1 && parameters[0].is_number_integer())) {
+        socket->write(R"({"error": "set_current takes exactly one integer argument")");
     }
 
-    if (operation == "get_state") {
-        json response;
-        response["autoplay"] = state_.autoplay();
-        response["items"] = {};
-        
-        for (const State::Item& item : state_.items()) {
-            json obj;
-            obj["name"] = item.name();
-            obj["url"] = item.url();
-            response["items"].push_back(obj);
-        }
+    state_.setCurrentIndex(parameters[0].get<int>());
+    socket->write(R"({"status": "success"})");
+}
 
-        connection->write(response.dump().c_str());
+void Remote::set_autoplay(QLocalSocket* socket, json& parameters)
+{
+    if (!(parameters.size() == 1 && parameters[0].is_boolean())) {
+        socket->write(R"({"status": "error", "message": "set_autoplay takes exactly one boolean argument")");
     }
+
+    state_.setAutoplay(parameters[0].get<bool>());
+    socket->write(R"({"status": "success"})");
+}
+
+void Remote::get_state(QLocalSocket* socket, json& parameters)
+{
+    json response;
+    response["autoplay"] = state_.autoplay();
+    response["items"] = {};
+    
+    for (const State::Item& item : state_.items()) {
+        json obj;
+        obj["name"] = item.name();
+        obj["url"] = item.url();
+        response["items"].push_back(obj);
+    }
+
+    socket->write(response.dump().c_str());
 }

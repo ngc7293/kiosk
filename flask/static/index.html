@@ -35,30 +35,34 @@ var app = new Vue({
     methods: {
         getState: function() {
             axios.post('/', {
-                operation: 'get_state'
+                operation: 'get_state',
+                parameters: []
             }).then(response => {
                 this.items = response.data.items
                 this.autoplay = response.data.autoplay
-                console.log("get state")
-            })
+            }).catch(error => {
+                console.log('error', error.response.data)
+            });
         },
         setAutoplay: function(autoplay) {
             axios.post('/', {
                 operation: 'set_autoplay',
                 parameters: [autoplay]
             }).then(response => {
-                console.log("set autoplay")
                 this.getState()
-            })
+            }).catch(error => {
+                console.log('error', error.response.data)
+            });
         },
         setCurrent: function(index) {
             axios.post('/', {
                 operation: 'set_current',
                 parameters: [index]
             }).then(response => {
-                console.log("set current")
                 this.setAutoplay(false)
-            })
+            }).catch(error => {
+                console.log('error', error.response.data)
+            });
         }
     }
 })

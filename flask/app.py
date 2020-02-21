@@ -5,10 +5,14 @@ from socket import socket, AF_UNIX, SOCK_STREAM
 
 from flask import Flask, Response, request
 
-sock = socket(family=AF_UNIX, type=SOCK_STREAM)
-sock.connect("/tmp/kiosk")
 
+def connect():
+    sock.connect("/tmp/kiosk")
+
+
+sock = socket(family=AF_UNIX, type=SOCK_STREAM)
 app = Flask(__name__)
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -17,8 +21,22 @@ def index():
 
 @app.route('/', methods=['POST'])
 def update():
-    sock.send(request.data)
-    return Response(sock.recv(4096), 200, mimetype='application/json')
+    try:
+        sock.send(request.data)
+    except BrokenPipeError:
+        return Response(json.dumps({'status': 'error', 'message': 'broken pipe'}), 500, mimetype='application/json')
+
+    data = json.loads(sock.recv(4096))
+
+    status = 200
+    if 'status' in data and data['status'] == 'error':
+        status = 400
+
+    print(data)
+
+    return Response(json.dumps(data), status=status, mimetype='application/json')
+
 
 if __name__ == "__main__":
-    app.run()
+    connect()
+    app.run(host='192.168.8.68')
